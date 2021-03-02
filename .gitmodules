@@ -13,3 +13,6 @@
 [submodule "caderneta-gateway"]
 	path = caderneta-gateway
 	url = https://github.com/sironAzevedo/caderneta-gateway.git
+[submodule "caderneta-stream-services"]
+	path = caderneta-stream-services
+	url = https://github.com/sironAzevedo/caderneta-stream-services.git
