@@ -16,3 +16,6 @@
 [submodule "caderneta-stream-services"]
 	path = caderneta-stream-services
 	url = https://github.com/sironAzevedo/caderneta-stream-services.git
+[submodule "caderneta-user-services"]
+	path = caderneta-user-services
+	url = https://github.com/sironAzevedo/caderneta-user-services.git
