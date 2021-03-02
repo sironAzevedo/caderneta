@@ -1,0 +1,5 @@
+kafka:
+  bootstrapAddress: netflix-kafka:9092
+  topic:
+    user: stream_new_user
+    conta: stream_new_account

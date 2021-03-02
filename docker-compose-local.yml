@@ -1,0 +1,175 @@
+version: "3.9"
+services:
+    
+    caderneta-zookeeper:        
+        image: wurstmeister/zookeeper
+        container_name: caderneta-zookeeper
+        ports:
+        - "2181:2181"
+        networks:
+        - caderneta-net
+    
+    caderneta-kafka:        
+        image: wurstmeister/kafka
+        container_name: caderneta-kafka
+        ports:
+        - "9092:9092"
+        networks:
+        - caderneta-net
+        environment:
+        - KAFKA_ADVERTISED_HOST_NAME=${KAFKA_HOSTNAME:-caderneta-kafka}
+        - KAFKA_LISTENERS=PLAINTEXT://:9092
+        - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${KAFKA_HOSTNAME:-caderneta-kafka}:9092
+        - KAFKA_ZOOKEEPER_CONNECT=${KAFKA_ZOOKEEPER_CONNECT:-caderneta-zookeeper}:2181
+        depends_on:
+        - caderneta-zookeeper        
+            
+    caderneta-zipkin:
+        container_name: caderneta-zipkin
+        image: openzipkin/zipkin
+        ports:
+        - "9411:9411"
+        networks:
+        - caderneta-net
+    
+    caderneta-redis:
+        container_name: caderneta-redis
+        image: redis
+        ports:
+        - "6379:6379"
+        networks:
+        - caderneta-net
+        
+    caderneta-config-server:
+        container_name: caderneta-config-server
+        image: caderneta-config-server:latest
+        build: 
+          context: ./caderneta-config-server/
+          dockerfile: ./Dockerfile        
+        ports:
+        - "8888:8888"
+        networks:
+        - caderneta-net
+        mem_limit: 512m
+        
+    caderneta-eureka-server:
+        image: caderneta-eureka-server:latest
+        container_name: caderneta-eureka-server 
+        build: 
+          context: ./caderneta-eureka-server/
+          dockerfile: ./Dockerfile        
+        ports:
+        - "8761:8761"
+        networks:
+        - caderneta-net
+        
+    caderneta-stream-services:
+        container_name: caderneta-stream-services
+        image: caderneta-stream-services:latest
+        build: 
+          context: ./caderneta-stream-services/
+          dockerfile: ./Dockerfile
+        networks:
+        - caderneta-net
+        mem_limit: 512m
+        environment:
+        - ENVIRONMENT=test
+        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
+        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
+        depends_on:
+        - caderneta-kafka
+        - caderneta-config-server
+        - caderneta-eureka-server
+        
+    caderneta-user-services:
+        container_name: caderneta-user-services
+        image: caderneta-user-services:latest
+        build: 
+          context: ./caderneta-user-services/
+          dockerfile: ./Dockerfile        
+        networks:
+        - caderneta-net        
+        mem_limit: 512m
+        environment:
+        - ENVIRONMENT=test
+        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
+        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
+        depends_on:
+        - caderneta-config-server
+        - caderneta-eureka-server
+        
+    caderneta-contas-services:
+        container_name: caderneta-contas-services
+        image: caderneta-contas-services:latest
+        build: 
+          context: ./caderneta-contas-services/
+          dockerfile: ./Dockerfile        
+        networks:
+        - caderneta-net        
+        mem_limit: 512m
+        environment:
+        - ENVIRONMENT=test
+        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
+        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
+        depends_on:
+        - caderneta-config-server
+        - caderneta-eureka-server
+        - caderneta-redis
+        - caderneta-user-services
+        
+    caderneta-dashboard-services:
+        container_name: caderneta-dashboard-services
+        image: caderneta-dashboard-services:latest
+        build: 
+          context: ./caderneta-dashboard-services/
+          dockerfile: ./Dockerfile        
+        networks:
+        - caderneta-net        
+        mem_limit: 512m
+        environment:
+        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
+        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
+        depends_on:
+        - caderneta-config-server
+        - caderneta-eureka-server
+        - caderneta-user-services
+        - caderneta-contas-services
+                
+    caderneta-gateway:
+        container_name: caderneta-gateway
+        image: caderneta-gateway:latest
+        build: 
+          context: ./caderneta-gateway/
+          dockerfile: ./Dockerfile        
+        ports:
+        - "8765:8765"
+        networks:
+        - caderneta-net        
+        mem_limit: 512m
+        environment:
+        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
+        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
+        depends_on:
+        - caderneta-config-server
+        - caderneta-eureka-server
+        - caderneta-user-services
+        - caderneta-contas-services
+        - caderneta-dashboard-services
+        
+    caderneta-front:
+        container_name: caderneta-front
+        image: caderneta-front:latest
+        build:
+            context: ./caderneta-front/
+            dockerfile: ./Dockerfile
+        ports:
+        - "8081:80"  
+        networks:
+        - caderneta-net
+        depends_on:
+        - caderneta-gateway
+        
+networks:
+  caderneta-net:
+    name: caderneta-net
+    driver: bridge
