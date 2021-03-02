@@ -1,0 +1,3 @@
+[submodule "caderneta-front"]
+	path = caderneta-front
+	url = https://github.com/sironAzevedo/caderneta-front.git
