@@ -10,3 +10,6 @@
 [submodule "caderneta-eureka-server"]
 	path = caderneta-eureka-server
 	url = https://github.com/sironAzevedo/caderneta-eureka-server.git
+[submodule "caderneta-gateway"]
+	path = caderneta-gateway
+	url = https://github.com/sironAzevedo/caderneta-gateway.git
