@@ -7,3 +7,6 @@
 [submodule "caderneta-dashboard-services"]
 	path = caderneta-dashboard-services
 	url = https://github.com/sironAzevedo/caderneta-dashboard-services.git
+[submodule "caderneta-eureka-server"]
+	path = caderneta-eureka-server
+	url = https://github.com/sironAzevedo/caderneta-eureka-server.git
