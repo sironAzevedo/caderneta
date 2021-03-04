@@ -30,3 +30,4 @@ spring:
             - classpath:db/migration            
 kafka:
   bootstrapAddress: caderneta-kafka:9092
+  
