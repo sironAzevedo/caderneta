@@ -10,5 +10,5 @@ spring:
         
 kafka:
   topic:
-    user: stream_new_user
-    conta: stream_new_account
+    user: 019d45as-new_user
+    conta: 019d45as-new_account
