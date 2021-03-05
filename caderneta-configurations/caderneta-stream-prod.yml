@@ -1,5 +1,14 @@
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_URL:rocket-01.srvs.cloudkafka.com:9094, rocket-02.srvs.cloudkafka.com:9094, rocket-03.srvs.cloudkafka.com:9094}
+    properties:
+      security:
+        protocol: SASL_SSL
+      sasl:
+        mechanism: SCRAM-SHA-256
+        jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${CLOUDKARAFKA_USERNAME}" password="${CLOUDKARAFKA_PASSWORD}";
+        
 kafka:
-  bootstrapAddress: netflix-kafka:9092
   topic:
     user: stream_new_user
     conta: stream_new_account

@@ -156,16 +156,16 @@ services:
 #        - caderneta-contas-services
 #        - caderneta-dashboard-services
         
-    caderneta-front:
-        container_name: caderneta-front
-        image: caderneta-front:latest
-        build:
-            context: ./caderneta-front/
-            dockerfile: ./Dockerfile
-        ports:
-        - "8081:80"  
-        networks:
-        - caderneta-net
+#    caderneta-front:
+#        container_name: caderneta-front
+#        image: caderneta-front:latest
+#        build:
+#            context: ./caderneta-front/
+#            dockerfile: ./Dockerfile
+#        ports:
+#        - "8081:80"  
+#        networks:
+#        - caderneta-net
         
 networks:
   caderneta-net:
