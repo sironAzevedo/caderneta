@@ -156,14 +156,12 @@ services:
         - caderneta-dashboard-services
         
     caderneta-front:        
-        image: sirondba/caderneta-front
+        image: sirondba/caderneta-front:latest
         container_name: caderneta-front
         ports:
         - "8081:80"  
         networks:
         - caderneta-net
-        depends_on:
-        - caderneta-gateway
         
 networks:
   caderneta-net:
