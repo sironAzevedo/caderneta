@@ -1,4 +1,4 @@
-version: "3.9"
+version: "3.3"
 
 services:
 
@@ -85,5 +85,4 @@ services:
       
 networks:
   caderneta-net:
-    name: caderneta-net
     driver: bridge
