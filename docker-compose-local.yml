@@ -1,5 +1,18 @@
 version: "3.9"
 services:
+
+    db-caderneta-user:
+        image: postgres:12-alpine
+        restart: always
+        container_name: db-caderneta-user
+        ports:
+        - "5432:5432"
+        networks:
+        - caderneta-net
+        environment:
+        - POSTGRES_DB=db_caderneta_user
+        - POSTGRES_PASSWORD=root
+        mem_limit: 512m
     
 #    caderneta-zookeeper:        
 #        image: wurstmeister/zookeeper
@@ -24,14 +37,14 @@ services:
 #        depends_on:
 #        - caderneta-zookeeper        
 #            
-#    caderneta-zipkin:
-#        container_name: caderneta-zipkin
-#        image: openzipkin/zipkin
-#        ports:
-#        - "9411:9411"
-#        networks:
-#        - caderneta-net
-#    
+    caderneta-zipkin:
+        container_name: caderneta-zipkin
+        image: openzipkin/zipkin
+        ports:
+        - "9411:9411"
+        networks:
+        - caderneta-net
+    
 #    caderneta-redis:
 #        container_name: caderneta-redis
 #        image: redis
@@ -40,29 +53,29 @@ services:
 #        networks:
 #        - caderneta-net
 #        
-#    caderneta-config-server:
-#        container_name: caderneta-config-server
-#        image: caderneta-config-server:latest
-#        build: 
-#          context: ./caderneta-config-server/
-#          dockerfile: ./Dockerfile        
-#        ports:
-#        - "8888:8888"
-#        networks:
-#        - caderneta-net
-#        mem_limit: 512m
-#        
-#    caderneta-eureka-server:
-#        image: caderneta-eureka-server:latest
-#        container_name: caderneta-eureka-server 
-#        build: 
-#          context: ./caderneta-eureka-server/
-#          dockerfile: ./Dockerfile        
-#        ports:
-#        - "8761:8761"
-#        networks:
-#        - caderneta-net
-#        
+    caderneta-config-server:
+        container_name: caderneta-config-server
+        image: caderneta-config-server:latest
+        build: 
+          context: ./caderneta-config-server/
+          dockerfile: ./Dockerfile        
+        ports:
+        - "8888:8888"
+        networks:
+        - caderneta-net
+        mem_limit: 512m
+        
+    caderneta-eureka-server:
+        image: caderneta-eureka-server:latest
+        container_name: caderneta-eureka-server 
+        build: 
+          context: ./caderneta-eureka-server/
+          dockerfile: ./Dockerfile        
+        ports:
+        - "8761:8761"
+        networks:
+        - caderneta-net
+        
 #    caderneta-stream-services:
 #        container_name: caderneta-stream-services
 #        image: caderneta-stream-services:latest
@@ -81,23 +94,26 @@ services:
 #        - caderneta-config-server
 #        - caderneta-eureka-server
 #        
-#    caderneta-user-services:
-#        container_name: caderneta-user-services
-#        image: caderneta-user-services:latest
-#        build: 
-#          context: ./caderneta-user-services/
-#          dockerfile: ./Dockerfile        
-#        networks:
-#        - caderneta-net        
-#        mem_limit: 512m
-#        environment:
-#        - ENVIRONMENT=test
-#        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
-#        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
-#        depends_on:
-#        - caderneta-config-server
-#        - caderneta-eureka-server
-#        
+    caderneta-user-services:
+        container_name: caderneta-user-services
+        image: caderneta-user-services:latest
+        build: 
+          context: ./caderneta-user-services/
+          dockerfile: ./Dockerfile        
+        networks:
+        - caderneta-net        
+        mem_limit: 512m
+        environment:
+        - ENVIRONMENT=dev
+        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
+        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
+        links:
+        - "db-caderneta-user:database"
+        depends_on:
+        - caderneta-config-server
+        - caderneta-eureka-server
+        - db-caderneta-user
+        
 #    caderneta-contas-services:
 #        container_name: caderneta-contas-services
 #        image: caderneta-contas-services:latest
