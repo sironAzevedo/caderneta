@@ -20,4 +20,4 @@ spring:
     locations:
       - classpath:db/migration
 kafka:
-  bootstrapAddress: 127.0.0.1:9092
+  bootstrapAddress: ${KAFKA_URL:localhost:29092}

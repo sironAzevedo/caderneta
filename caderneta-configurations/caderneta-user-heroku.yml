@@ -1,9 +1,9 @@
 spring:
     datasource:
-        url: jdbc:postgresql://localhost:5432/db_caderneta_user
+        url: jdbc:postgresql://ec2-18-211-97-89.compute-1.amazonaws.com:5432/d3emkulf1i3lok
         driver-class-name: org.postgresql.Driver
-        username: postgres
-        password: root
+        username: qijrbxsotpxmcf
+        password: 90e66e269b94b0fdc9307830df4fc238cc04c92a3e323ed35e66e626cf99db80
         initialization-mode: never
         tomcat:
           test-while-idle: true

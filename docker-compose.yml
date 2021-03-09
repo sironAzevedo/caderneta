@@ -1,65 +1,137 @@
 version: "3.3"
 services:
-#    db-caderneta-user:
-#        image: postgres:12-alpine
-#        restart: always
-#        container_name: db-caderneta-user
-#        ports:
-#        - "5432:5432"
-#        networks:
-#        - caderneta-net
-#        environment:
-#        - POSTGRES_DB=db_caderneta_user
-#        - POSTGRES_PASSWORD=root
-#        mem_limit: 512m
-#
-#    db-caderneta-contas:
-#        image: postgres:12-alpine
-#        restart: always
-#        container_name: db-caderneta-contas
-#        ports:
-#        - "5433:5432"
-#        networks:
-#        - caderneta-net
-#        environment:
-#        - POSTGRES_DB=db_caderneta_contas
-#        - POSTGRES_PASSWORD=root
-#        mem_limit: 512m
+
+    db-caderneta-user:
+        image: postgres:12-alpine
+        restart: always
+        container_name: db-caderneta-user
+        ports:
+        - "5432:5432"
+        networks:
+        - caderneta-net
+        environment:
+        - POSTGRES_DB=db_caderneta_user
+        - POSTGRES_PASSWORD=root
+        mem_limit: 512m
         
-#    caderneta-zookeeper:        
-#        image: wurstmeister/zookeeper
-#        container_name: caderneta-zookeeper
-#        ports:
-#        - "2181:2181"
-#        networks:
-#        - caderneta-net
-#    
-#    caderneta-kafka:        
-#        image: wurstmeister/kafka
-#        container_name: caderneta-kafka
-#        ports:
-#        - "9092:9092"
-#        networks:
-#        - caderneta-net
-#        depends_on:
-#        - caderneta-zookeeper
-#        environment:
-#            KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
-#            KAFKA_ZOOKEEPER_CONNECT: caderneta-zookeeper:2181
+    db-caderneta-contas:
+        image: postgres:12-alpine
+        restart: always
+        container_name: db-caderneta-contas
+        ports:
+        - "5433:5432"
+        networks:
+        - caderneta-net
+        environment:
+        - POSTGRES_DB=db_caderneta_contas
+        - POSTGRES_PASSWORD=root
+        mem_limit: 512m
+
+    zookeeper:
+        image: confluentinc/cp-zookeeper:5.5.1
+        container_name: zookeeper
+        restart: unless-stopped
+        ports:
+          - "2181:2181"
+        networks:
+        - caderneta-net
+        environment:
+          ZOOKEEPER_CLIENT_PORT: 2181
+        healthcheck:
+          test: "echo stat | nc localhost $$ZOOKEEPER_CLIENT_PORT"
+          start_period: 30s
+
+    kafka:
+        image: confluentinc/cp-kafka:5.5.1
+        container_name: kafka
+        restart: unless-stopped
+        depends_on:
+          - zookeeper
+        ports:
+          - "9092:9092"
+          - "29092:29092"
+        networks:
+        - caderneta-net
+        environment:
+          KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_DELETE_TOPIC_ENABLE: "true"
+        healthcheck:
+          test: [ "CMD", "nc", "-z", "localhost", "9092" ]
+          start_period: 30s
+    
+    kafka-rest-proxy:
+        image: confluentinc/cp-kafka-rest:5.5.1
+        container_name: kafka-rest-proxy
+        restart: unless-stopped
+        networks:
+        - caderneta-net
+        depends_on:
+          - zookeeper
+          - kafka
+        ports:
+          - "8082:8082"
+        environment:
+          KAFKA_REST_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:29092
+          KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
+          KAFKA_REST_HOST_NAME: kafka-rest-proxy
+          KAFKA_REST_LISTENERS: http://0.0.0.0:8082
+          KAFKA_REST_CONSUMER_REQUEST_TIMEOUT_MS: 30000
+        healthcheck:
+          test: "curl -f http://localhost:8082 || exit 1"
+          start_period: 30s
+
+    kafka-topics-ui:
+        image: landoop/kafka-topics-ui:0.9.4
+        container_name: kafka-topics-ui
+        restart: unless-stopped
+        depends_on:
+          - kafka-rest-proxy
+        networks:
+        - caderneta-net
+        ports:
+          - "8085:8000"
+        environment:
+          KAFKA_REST_PROXY_URL: http://kafka-rest-proxy:8082
+          PROXY: "true"
+        healthcheck:
+          test: "wget --quiet --tries=1 --spider http://localhost:8000 || exit 1"
+          start_period: 30s
+
+    kafka-manager:
+        container_name: kafka-manager
+        image: hlebalbau/kafka-manager:3.0.0.5
+        restart: unless-stopped
+        depends_on:
+          - zookeeper
+        networks:
+        - caderneta-net
+        ports:
+          - "9000:9000"
+        environment:
+          ZK_HOSTS: zookeeper:2181
+          APPLICATION_SECRET: "random-secret"
+        command: -Dpidfile.path=/dev/null
+        healthcheck:
+          test: "curl -f http://localhost:9000 || exit 1"
+          start_period: 30s
+          
+    caderneta-redis:
+        container_name: caderneta-redis
+        image: redis
+        command: redis-server --requirepass RedisCad2021!
+        ports:
+        - "6379:6379"
+        networks:
+        - caderneta-net
             
     caderneta-zipkin:
         image: openzipkin/zipkin
         container_name: caderneta-zipkin        
         ports:
         - "9411:9411"
-        networks:
-        - caderneta-net
-    
-    caderneta-redis:
-        container_name: caderneta-redis
-        image: redis
-        ports:
-        - "6379:6379"
         networks:
         - caderneta-net
         
@@ -70,7 +142,7 @@ services:
         - "8888:8888"
         networks:
         - caderneta-net
-        
+    
     caderneta-eureka-server:
         image: sirondba/caderneta-eureka-server:latest
         container_name: caderneta-eureka-server        
@@ -79,16 +151,26 @@ services:
         networks:
         - caderneta-net
         
-    #caderneta-stream-services:
-    #    image: sirondba/caderneta-stream-services:latest
-    #    container_name: caderneta-stream-services
-    #    networks:
-    #    - caderneta-net
-    #    environment:
-    #    - URL_CONFIG_SERVER=http://caderneta-config-server:8888
-    #    - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
-    #    depends_on:
-    #    - caderneta-kafka
+    caderneta-stream-services:
+        image: sirondba/caderneta-stream-services:latest
+        container_name: caderneta-stream-services
+        networks:
+        - caderneta-net
+        ports:
+        - "8004:8004"
+        environment:
+        - ENVIRONMENT=docker
+        - KAFKA_URL=kafka:29092
+        - URL_ZIPKIN=http://caderneta-zipkin:9411
+        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
+        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
+        links:
+        - "caderneta-zipkin:zipkin"
+        - "kafka:kafka"
+        depends_on:
+        - kafka
+        - caderneta-config-server
+        - caderneta-eureka-server
         
     caderneta-user-services:
         image: sirondba/caderneta-user-services:9
@@ -98,12 +180,19 @@ services:
         ports:
         - "8002:8002"
         environment:
-        - ENVIRONMENT=test
+        - ENVIRONMENT=docker
+        - KAFKA_URL=kafka:29092
+        - URL_ZIPKIN=http://caderneta-zipkin:9411
         - URL_CONFIG_SERVER=http://caderneta-config-server:8888
         - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
+        links:
+        - "db-caderneta-user:db-caderneta-user"
+        - "caderneta-zipkin:caderneta-zipkin"
+        - "kafka:kafka"
         depends_on:
         - caderneta-config-server
         - caderneta-eureka-server
+        - db-caderneta-user
         
     caderneta-contas-services:
         image: sirondba/caderneta-contas-services:15
@@ -113,12 +202,23 @@ services:
         ports:
         - "8001:8001"
         environment:
-        - ENVIRONMENT=test
+        - ENVIRONMENT=docker
+        - REDISCLOUD_URL=caderneta-redis
+        - PORT_REDIS=6379
+        - REDIS_PASS=RedisCad2021!
+        - KAFKA_URL=kafka:29092
+        - URL_ZIPKIN=http://caderneta-zipkin:9411
         - URL_CONFIG_SERVER=http://caderneta-config-server:8888
         - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
+        links:
+        - "db-caderneta-contas:db-caderneta-contas"
+        - "caderneta-zipkin:caderneta-zipkin"
+        - "kafka:kafka"
+        - "caderneta-redis:caderneta-redis"
         depends_on:
         - caderneta-config-server
         - caderneta-eureka-server
+        - db-caderneta-contas
         - caderneta-redis
         - caderneta-user-services
         
@@ -130,30 +230,16 @@ services:
         ports:
         - "8003:8003"
         environment:
+        - URL_ZIPKIN=http://caderneta-zipkin:9411
         - URL_CONFIG_SERVER=http://caderneta-config-server:8888
         - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
+        links:
+        - "caderneta-zipkin:caderneta-zipkin"
         depends_on:
         - caderneta-config-server
         - caderneta-eureka-server
         - caderneta-user-services
         - caderneta-contas-services
-                
-    #caderneta-gateway:
-    #    image: sirondba/caderneta-gateway:latest
-    #    container_name: caderneta-gateway
-    #    ports:
-    #    - "8765:8765"
-    #    networks:
-    #    - caderneta-net
-    #    environment:
-    #    - URL_CONFIG_SERVER=http://caderneta-config-server:8888
-    #    - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
-    #    depends_on:
-    #    - caderneta-config-server
-    #    - caderneta-eureka-server
-    #    - caderneta-user-services
-    #    - caderneta-contas-services
-    #    - caderneta-dashboard-services
         
     caderneta-front:        
         image: sirondba/caderneta-front:28
