@@ -1,8 +1,8 @@
 spring:
     datasource:
-        url: jdbc:postgresql://db-caderneta-contas:5433/db_caderneta_contas
+        url: jdbc:postgresql://db-caderneta:5432/db_caderneta_contas
         driver-class-name: org.postgresql.Driver
-        username: postgres
+        username: caderneta
         password: root
         initialization-mode: never
         tomcat:
