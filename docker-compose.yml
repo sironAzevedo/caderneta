@@ -1,32 +1,6 @@
 version: "3.3"
 services:
 
-#    db-caderneta-user:
-#        image: postgres:12-alpine
-#        restart: always
-#        container_name: db-caderneta-user
-#        ports:
-#        - "5432:5432"
-#        networks:
-#        - caderneta-net
-#        environment:
-#        - POSTGRES_DB=db_caderneta_user
-#        - POSTGRES_PASSWORD=root
-#        mem_limit: 512m
-#        
-#    db-caderneta-contas:
-#        image: postgres:12-alpine
-#        restart: always
-#        container_name: db-caderneta-contas
-#        ports:
-#        - "5433:5432"
-#        networks:
-#        - caderneta-net
-#        environment:
-#        - POSTGRES_DB=db_caderneta_contas
-#        - POSTGRES_PASSWORD=root
-#        mem_limit: 512m
-        
     db-caderneta:
         image: postgres:12-alpine
         restart: always
@@ -42,22 +16,6 @@ services:
             - "5432:5432"
         volumes: 
             - ./caderneta_init.sql:/docker-entrypoint-initdb.d/caderneta_init.sql
-    
-#    postgres:
-#        image: postgres:12-alpine
-#        restart: always
-#        container_name: db-postgres
-#        environment: 
-#            - DATABASE_HOST=127.0.0.1
-#            - POSTGRES_USER=root
-#            - POSTGRES_PASSWORD=root
-#            - POSTGRES_DB=root
-#        networks:
-#        - caderneta-net
-#        ports: 
-#            - "5440:5432"
-#        volumes: 
-#            - ./docker_postgres_init.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql
         
     pgadmin-compose:
         image: dpage/pgadmin4
@@ -196,96 +154,104 @@ services:
         networks:
         - caderneta-net
         
-#    caderneta-user-services:
-#        image: sirondba/caderneta-user-services:10
-#        container_name: caderneta-user-services
-#        networks:
-#        - caderneta-net
-#        ports:
-#        - "8002:8002"
-#        environment:
-#        - ENVIRONMENT=docker
-#        - KAFKA_URL=kafka:29092
-#        - URL_ZIPKIN=http://caderneta-zipkin:9411
-#        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
-#        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
-#        links:
-#        - "db-caderneta-user:db-caderneta-user"
-#        - "caderneta-zipkin:caderneta-zipkin"
-#        - "kafka:kafka"
-#        depends_on:
-#        - caderneta-config-server
-#        - caderneta-eureka-server
-#        - db-caderneta-user
-#        
-#    caderneta-contas-services:
-#        image: sirondba/caderneta-contas-services:1
-#        container_name: caderneta-contas-services
-#        networks:
-#        - caderneta-net
-#        ports:
-#        - "8001:8001"
-#        environment:
-#        - ENVIRONMENT=docker
-#        - REDISCLOUD_URL=caderneta-redis
-#        - PORT_REDIS=6379
-#        - REDIS_PASS=RedisCad2021!
-#        - KAFKA_URL=kafka:29092
-#        - URL_ZIPKIN=http://caderneta-zipkin:9411
-#        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
-#        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
-#        links:
-#        - "db-caderneta-contas:database"
-#        - "caderneta-zipkin:caderneta-zipkin"
-#        - "kafka:kafka"
-#        - "caderneta-redis:caderneta-redis"
-#        depends_on:
-#        - caderneta-config-server
-#        - caderneta-eureka-server
-#        - db-caderneta-contas
-#        - caderneta-redis
-#        - caderneta-user-services
-
-#    caderneta-stream-services:
-#        image: sirondba/caderneta-stream-services:latest
-#        container_name: caderneta-stream-services
-#        networks:
-#        - caderneta-net
-#        ports:
-#        - "8004:8004"
-#        environment:
-#        - ENVIRONMENT=docker
-#        - KAFKA_URL=kafka:29092
-#        - URL_ZIPKIN=http://caderneta-zipkin:9411
-#        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
-#        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
-#        links:
-#        - "caderneta-zipkin:zipkin"
-#        - "kafka:kafka"
-#        depends_on:
-#        - kafka
-#        - caderneta-config-server
-#        - caderneta-eureka-server
+    caderneta-stream-services:
+        image: sirondba/caderneta-stream-services:1
+        container_name: caderneta-stream-services
+        networks:
+        - caderneta-net
+        ports:
+        - "8004:8004"
+        environment:
+        - ENVIRONMENT=docker
+        - KAFKA_URL=kafka:29092
+        - URL_ZIPKIN=http://caderneta-zipkin:9411/
+        - USER_URL=http://caderneta-user-services:8002
+        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
+        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
+        links:
+        - "kafka:kafka"
+        - "caderneta-zipkin:zipkin"        
+        - "caderneta-user-services:caderneta-user-services"
+        depends_on:
+        - kafka
+        - caderneta-config-server
+        - caderneta-eureka-server
         
-#    caderneta-dashboard-services:
-#        image: sirondba/caderneta-dashboard-services:6
-#        container_name: caderneta-dashboard-services        
-#        networks:
-#        - caderneta-net
-#        ports:
-#        - "8003:8003"
-#        environment:
-#        - URL_ZIPKIN=http://caderneta-zipkin:9411
-#        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
-#        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
-#        links:
-#        - "caderneta-zipkin:caderneta-zipkin"
-#        depends_on:
-#        - caderneta-config-server
-#        - caderneta-eureka-server
-#        - caderneta-user-services
-#        - caderneta-contas-services
-#        
+    caderneta-user-services:
+        image: sirondba/caderneta-user-services:10
+        container_name: caderneta-user-services
+        networks:
+        - caderneta-net
+        ports:
+        - "8002:8002"
+        environment:
+        - ENVIRONMENT=docker
+        - KAFKA_URL=kafka:29092
+        - URL_ZIPKIN=http://caderneta-zipkin:9411
+        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
+        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
+        links:
+        - "db-caderneta:db-caderneta"
+        - "caderneta-zipkin:caderneta-zipkin"
+        - "kafka:kafka"
+        depends_on:
+        - caderneta-config-server
+        - caderneta-eureka-server
+        - db-caderneta
+        
+    caderneta-contas-services:
+        image: sirondba/caderneta-contas-services:1
+        container_name: caderneta-contas-services
+        networks:
+        - caderneta-net
+        ports:
+        - "8001:8001"
+        environment:
+        - ENVIRONMENT=docker
+        - REDISCLOUD_URL=caderneta-redis
+        - PORT_REDIS=6379
+        - REDIS_PASS=RedisCad2021!
+        - KAFKA_URL=kafka:29092
+        - USER_URL=http://caderneta-user-services:8002
+        - URL_ZIPKIN=http://caderneta-zipkin:9411
+        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
+        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
+        links:
+        - "db-caderneta:db-caderneta"
+        - "caderneta-user-services:caderneta-user-services"
+        - "caderneta-zipkin:caderneta-zipkin"
+        - "kafka:kafka"
+        - "caderneta-redis:caderneta-redis"
+        depends_on:
+        - caderneta-config-server
+        - caderneta-eureka-server
+        - db-caderneta
+        - caderneta-redis
+        - caderneta-user-services
+        
+    caderneta-dashboard-services:
+        image: sirondba/caderneta-dashboard-services:7
+        container_name: caderneta-dashboard-services        
+        networks:
+        - caderneta-net
+        ports:
+        - "8003:8003"
+        environment:
+        - URL_ZIPKIN=http://caderneta-zipkin:9411/
+        - USER_URL=http://caderneta-user-services:8002
+        - CONTAS_URL=http://caderneta-contas-services:8001
+        - URL_CONFIG_SERVER=http://caderneta-config-server:8888
+        - URL_EUREKA_SERVER=http://caderneta-eureka-server:8761/eureka
+        links:
+        - "caderneta-zipkin:caderneta-zipkin"
+        - "caderneta-user-services:caderneta-user-services"
+        - "caderneta-contas-services:caderneta-contas-services"
+        depends_on:
+        - caderneta-config-server
+        - caderneta-eureka-server
+        - caderneta-user-services
+        - caderneta-contas-services
+        
 #    caderneta-front:        
 #        image: sirondba/caderneta-front:28
 #        container_name: caderneta-front

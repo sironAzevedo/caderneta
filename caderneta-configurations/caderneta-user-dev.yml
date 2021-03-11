@@ -2,7 +2,7 @@ spring:
     datasource:
         url: jdbc:postgresql://localhost:5432/db_caderneta_user
         driver-class-name: org.postgresql.Driver
-        username: postgres
+        username: caderneta
         password: root
         initialization-mode: never
         tomcat:
