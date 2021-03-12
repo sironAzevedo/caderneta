@@ -253,7 +253,7 @@ services:
         - caderneta-contas-services
         
     caderneta-front:        
-        image: sirondba/caderneta-front:36
+        image: sirondba/caderneta-front:37
         container_name: caderneta-front
         ports:
         - "8081:80"  
