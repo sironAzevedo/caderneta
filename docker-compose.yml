@@ -259,6 +259,9 @@ services:
         - "8081:80"  
         networks:
         - caderneta-net
+        links:
+        - "caderneta-user-services:caderneta-user-services"
+        - "caderneta-contas-services:caderneta-contas-services"
         
 networks:
   caderneta-net:
