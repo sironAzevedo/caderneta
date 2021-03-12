@@ -200,7 +200,7 @@ services:
         - db-caderneta
         
     caderneta-contas-services:
-        image: sirondba/caderneta-contas-services:1
+        image: sirondba/caderneta-contas-services:2
         container_name: caderneta-contas-services
         networks:
         - caderneta-net
@@ -252,13 +252,13 @@ services:
         - caderneta-user-services
         - caderneta-contas-services
         
-#    caderneta-front:        
-#        image: sirondba/caderneta-front:28
-#        container_name: caderneta-front
-#        ports:
-#        - "8081:80"  
-#        networks:
-#        - caderneta-net
+    caderneta-front:        
+        image: sirondba/caderneta-front:36
+        container_name: caderneta-front
+        ports:
+        - "8081:80"  
+        networks:
+        - caderneta-net
         
 networks:
   caderneta-net:
